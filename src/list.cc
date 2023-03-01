@@ -9,7 +9,7 @@ struct list_node_t
 {
 	struct list_node_t *next;
 	struct list_node_t *prev;
-	char *data;
+	int data;
 };
 
 struct list_t
@@ -35,7 +35,6 @@ void list_destroy(struct list_t *list)
 	while (list->begin != NULL)
 	{
 		node = list->begin->next;
-		free(list->begin->data);
 		free(list->begin);
 		list->begin = node;
 	}
@@ -55,16 +54,13 @@ int list_empty(const struct list_t *list)
 	return list->size == 0;
 }
 
-void list_push_back(struct list_t *list, const char* data)
+void list_push_back(struct list_t *list, int data)
 {
 	struct list_node_t *new_node;
-	int data_len;
 
 	new_node = (struct list_node_t*)calloc(1, sizeof(struct list_node_t));
 
-	data_len = strlen(data);
-	new_node->data = (char*)calloc(data_len + 1, sizeof(char));
-	strcpy(new_node->data, data);
+	new_node->data = data;
 
 	if (list_empty(list))
 	{
@@ -90,18 +86,23 @@ void list_print(const struct list_t *list, FILE *fd)
 	
 	for (i = 0; i < list->size; i++, node = node->next)
 	{
-		fprintf(fd, "node №%d: %s\n", i, node->data);
+		fprintf(fd, "node №%d: %d\n", i, node->data);
 	}
 
 	return;
 }
 
-char *list_begin(const struct list_t *list)
+struct list_node_t *list_begin(const struct list_t *list)
 {
-	return list->begin->data;
+	return list->begin;
 }
 
-char *list_end(const struct list_t *list)
+struct list_node_t *list_end(const struct list_t *list)
 {
-	return list->end->data;
+	return list->end;
+}
+
+int list_node_get_data(const struct list_node_t *list_node)
+{
+	return list_node->data;
 }
