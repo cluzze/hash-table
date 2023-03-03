@@ -16,21 +16,21 @@ struct list_t
 {
 	struct list_node_t *begin;
 	struct list_node_t *end;
-	unsigned int size;
+	int size;
 };
 
 struct list_t *list_create()
 {
-	struct list_t *list;
+	struct list_t *list = NULL;
 
 	list = (struct list_t*)calloc(1, sizeof(struct list_t));
 
 	return list;
 }
 
-void list_destroy(struct list_t *list)
+void list_free(struct list_t *list)
 {
-	struct list_node_t *node;
+	struct list_node_t *node = NULL;
 
 	while (list->begin != NULL)
 	{
@@ -54,9 +54,9 @@ int list_empty(const struct list_t *list)
 	return list->size == 0;
 }
 
-void list_push_back(struct list_t *list, int data)
+struct list_node_t *list_push_back(struct list_t *list, int data)
 {
-	struct list_node_t *new_node;
+	struct list_node_t *new_node = NULL;
 
 	new_node = (struct list_node_t*)calloc(1, sizeof(struct list_node_t));
 
@@ -68,7 +68,7 @@ void list_push_back(struct list_t *list, int data)
 		list->end = new_node;
 		list->size++;
 
-		return;
+		return list->end;
 	}
 
 	list->end->next = new_node;
@@ -76,12 +76,48 @@ void list_push_back(struct list_t *list, int data)
 	list->end = new_node;
 	list->size++;
 
+	return list->end;
+}
+
+void list_erase(struct list_t *list, struct list_node_t *node)
+{
+	if (list->size == 1)
+	{
+		free(node);
+		list->begin = NULL;
+		list->end = NULL;
+		list->size--;
+		return;
+	}
+
+	if (node == list->begin)
+	{
+		list->begin = node->next;
+		node->next->prev = NULL;
+		list->size--;
+		free(node);
+		return;
+	}
+
+	if (node == list->end)
+	{
+		list->end = node->prev;
+		node->prev->next = NULL;
+		list->size--;
+		free(node);
+		return;
+	}
+
+	node->next->prev = node->prev;
+	node->prev->next = node->next;
+	list->size--;
+	free(node);
 	return;
 }
 
 void list_print(const struct list_t *list, FILE *fd)
 {
-	unsigned int i;
+	int i = 0;
 	struct list_node_t *node = list->begin;
 	
 	for (i = 0; i < list->size; i++, node = node->next)
@@ -105,4 +141,9 @@ struct list_node_t *list_end(const struct list_t *list)
 int list_node_get_data(const struct list_node_t *list_node)
 {
 	return list_node->data;
+}
+
+int *list_node_get_data_ptr(struct list_node_t *list_node)
+{
+	return &list_node->data;
 }
