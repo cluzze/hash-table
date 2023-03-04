@@ -19,7 +19,7 @@ struct htab_t
 	int size;
 };
 
-struct htab_node_t *htab_find_node(const struct htab_t *htab, const char * key);
+struct htab_node_t *htab_find_node(const struct htab_t *htab, const char * key, struct htab_node_t **erase);
 
 void free_nodes(struct htab_t *htab);
 
@@ -125,7 +125,7 @@ void htab_insert(struct htab_t *htab, const char *key, int value)
 
 	if (list_node)
 	{
-		*list_node_get_value_ptr(list_node) = value;
+		(*list_node_get_value_ptr(list_node))++;
 		return;
 	}
 
