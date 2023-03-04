@@ -9,7 +9,8 @@ struct list_node_t
 {
 	struct list_node_t *next;
 	struct list_node_t *prev;
-	int data;
+	const char *key;
+	int value;
 };
 
 struct list_t
@@ -54,13 +55,14 @@ int list_empty(const struct list_t *list)
 	return list->size == 0;
 }
 
-struct list_node_t *list_push_back(struct list_t *list, int data)
+struct list_node_t *list_push_back(struct list_t *list, const char *key, int value)
 {
 	struct list_node_t *new_node = NULL;
 
 	new_node = (struct list_node_t*)calloc(1, sizeof(struct list_node_t));
 
-	new_node->data = data;
+	new_node->key = key;
+	new_node->value = value;
 
 	if (list_empty(list))
 	{
@@ -122,7 +124,7 @@ void list_print(const struct list_t *list, FILE *fd)
 	
 	for (i = 0; i < list->size; i++, node = node->next)
 	{
-		fprintf(fd, "node №%d: %d\n", i, node->data);
+		fprintf(fd, "node %d: <key - %s, value - %d>\n", i, node->key, node->value);
 	}
 
 	return;
@@ -138,12 +140,42 @@ struct list_node_t *list_end(const struct list_t *list)
 	return list->end;
 }
 
-int list_node_get_data(const struct list_node_t *list_node)
+int list_node_get_value(struct list_node_t *list_node)
 {
-	return list_node->data;
+	return list_node->value;
 }
 
-int *list_node_get_data_ptr(struct list_node_t *list_node)
+int *list_node_get_value_ptr(struct list_node_t *list_node)
 {
-	return &list_node->data;
+	return &list_node->value;
 }
+
+const char *list_node_get_key(struct list_node_t *list_node)
+{
+	return list_node->key;
+}
+
+const char **list_node_get_key_ptr(struct list_node_t *list_node)
+{
+	return &list_node->key;
+}
+
+void list_for_each(struct list_t *list, struct htab_t *htab)
+{
+	int i = 0;
+	struct list_node_t *list_node = list->begin;
+
+	for (i = 0; i < list->size; i++, list_node = list_node->next)
+	{
+		htab_insert_list_node(htab, list_node);
+	}
+
+	return;
+}
+
+
+
+
+
+
+

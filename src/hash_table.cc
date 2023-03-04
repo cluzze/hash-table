@@ -1,20 +1,15 @@
 #include "hash_table.h"
+#include "list.h"
 
 #include <string.h>
 #include <stdlib.h>
 
 #define ALPH_CARDINALITY 31
 
-struct htab_node_data_t
-{
-	const char *key;
-	struct list_node_t *node;
-};
-
 struct htab_node_t
 {
 	struct htab_node_t *next;
-	struct htab_node_data_t data;
+	struct list_node_t *node;
 };
 
 struct htab_t
@@ -87,7 +82,7 @@ struct htab_node_t *htab_find_node(const struct htab_t *htab, const char * key, 
 
 	htab_node = htab->htab_nodes[hash];
 
-	while (htab_node && strcmp(htab_node->data.key, key))
+	while (htab_node && strcmp(list_node_get_key(htab_node->node), key))
 	{
 		if (erase)
 			*erase = htab_node;
@@ -98,7 +93,7 @@ struct htab_node_t *htab_find_node(const struct htab_t *htab, const char * key, 
 	return htab_node;
 }
 
-struct list_node_t *htab_find(const struct htab_t *htab, const char * key)
+struct list_node_t *htab_find(const struct htab_t *htab, const char *key)
 {
 	struct htab_node_t *htab_node = NULL;
 
@@ -107,34 +102,36 @@ struct list_node_t *htab_find(const struct htab_t *htab, const char * key)
 	if (!htab_node)
 		return NULL;
 
-	return htab_node->data.node;
+	return htab_node->node;
 }
 
-void htab_insert(struct htab_t *htab, const char *key, int new_value)
+void htab_insert_list_node(struct htab_t *htab, struct list_node_t *list_node)
 {
 	int hash = 0;
-	struct list_node_t *list_node = NULL;
 	struct htab_node_t *htab_node = NULL;
+	
+	hash = get_hash(list_node_get_key(list_node), htab->size);
+	htab_node = (struct htab_node_t*)calloc(1, sizeof(struct htab_node_t));
+	htab_node->node = list_node;
+	htab_node->next = htab->htab_nodes[hash];
+	htab->htab_nodes[hash] = htab_node;
+}
 
+void htab_insert(struct htab_t *htab, const char *key, int value)
+{
+	struct list_node_t *list_node = NULL;
 
 	list_node = htab_find(htab, key);
 
 	if (list_node)
 	{
-		*list_node_get_data_ptr(list_node) = new_value;
+		*list_node_get_value_ptr(list_node) = value;
 		return;
 	}
 
-	list_node = list_push_back(htab->list, new_value);
+	list_node = list_push_back(htab->list, key, value);
 
-	hash = get_hash(key, htab->size);
-
-	htab_node = (struct htab_node_t*)calloc(1, sizeof(struct htab_node_t));
-	
-	htab_node->data.key = key;
-	htab_node->data.node = list_node;
-	htab_node->next = htab->htab_nodes[hash];
-	htab->htab_nodes[hash] = htab_node;
+	htab_insert_list_node(htab, list_node);
 
 	return;
 }
@@ -144,7 +141,7 @@ int htab_size(const struct htab_t *htab)
 	return list_size(htab->list);
 }
 
-void htab_erase(struct htab_t *htab, const char *key) //lazy erase
+void htab_erase(struct htab_t *htab, const char *key)
 {
 	int hash = 0;
 	struct htab_node_t *htab_node = NULL;
@@ -155,7 +152,7 @@ void htab_erase(struct htab_t *htab, const char *key) //lazy erase
 	if (!htab_node)
 		return;
 
-	list_erase(htab->list, htab_node->data.node);
+	list_erase(htab->list, htab_node->node);
 
 	if (!prev)
 	{
@@ -171,21 +168,15 @@ void htab_erase(struct htab_t *htab, const char *key) //lazy erase
 
 void htab_rehash(struct htab_t *htab, int size)
 {
-	htab->size = size;
-
 	free_nodes(htab);
+
+	htab->size = size;
 
 	htab->htab_nodes = (struct htab_node_t**)calloc(htab->size, sizeof(struct htab_node_t*));
 
-	list_for_each(htab->list, f())
-	{
+	list_for_each(htab->list, htab);
 
-	}
-
-	f(list_node_t)
-	{
-
-	}
+	return;
 }
 
 void htab_print(const struct htab_t *htab, FILE *fd)
@@ -204,7 +195,8 @@ void htab_print(const struct htab_t *htab, FILE *fd)
 
 		while (htab_node)
 		{
-			fprintf(fd, "<key = %s; value = %d>, ", htab_node->data.key, list_node_get_data(htab_node->data.node));
+			fprintf(fd, "<key = %s; value = %d>, ", list_node_get_key(htab_node->node),
+													list_node_get_value(htab_node->node));
 			htab_node = htab_node->next;
 		}
 		fprintf(fd, "\n");
