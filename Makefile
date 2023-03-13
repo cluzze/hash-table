@@ -21,4 +21,4 @@ test_main.o: $(SRC)test_main.cc
 	$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm *.o main $(SRC)*.gch
+	rm *.o main test_main $(SRC)*.gch
