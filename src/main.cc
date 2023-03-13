@@ -1,8 +1,76 @@
 #include "list.h"
 #include "hash_table.h"
 
-#include "gtest/gtest.h"
+#include <stdlib.h>
 #include <string.h>
+
+#include "gtest/gtest.h"
+
+int solve(int *exp, FILE *inp)
+{
+	int i;
+	int res;
+	int n, text_len, ans_len;
+	char *text, *ans;
+	char *word;
+	struct htab_t *htab;
+	struct list_node_t *list_node;
+
+	fscanf(inp, "%d%d", &n, &text_len);
+
+	text = (char*)calloc(text_len + 1, sizeof(char));
+
+	fscanf(inp, "\n");
+	for (i = 0; i < text_len; i++)
+	{
+		fscanf(inp, "%c", &text[i]);
+	}
+
+	fscanf(inp, "%d", &ans_len);
+
+	ans = (char*)calloc(ans_len + 1, sizeof(char));
+
+	fscanf(inp, "\n");
+	for (i = 0; i < ans_len; i++)
+	{
+		fscanf(inp, "%c", &ans[i]);
+	}
+
+	htab = htab_create(10007);
+
+	word = strtok(text, " ");
+	while (word)
+	{
+		htab_insert(htab, word, 1);
+		word = strtok(NULL, " ");
+	}
+
+	word = strtok(ans, " ");
+
+	i = 0;
+
+	while (word)
+	{
+		list_node = htab_find(htab, word);
+		if (list_node)
+			res = list_node_get_value(list_node);
+		else
+			res = 0;
+
+		if (res != exp[i])
+			return 0;
+
+		word = strtok(NULL, " ");
+		i++;
+	}
+
+	//htab_print(htab, stdout);
+	free(text);
+	free(ans);
+	htab_free(htab);
+
+	return 1;
+}
 
 int main()
 {
@@ -10,132 +78,32 @@ int main()
 	return RUN_ALL_TESTS();
 }
 
-TEST(list, create)
+TEST(e2e, e2e)
 {
-	struct list_t *list = list_create();
+	int ans[8][34] = {{0, 3, 3},
+					{1, 2, 3},
+					{1, 1, 2, 0, 2},
+					{1, 0, 3, 3, 2, 1, 3, 2},
+					{4, 4, 4, 2, 2, 1, 2, 2, 4, 1, 5, 3, 0, 0, 2, 2, 1},
+					{3, 0, 1, 1, 5, 1, 2, 3, 4, 1, 2, 0, 2, 5, 2, 1, 4, 1, 2, 4, 4, 3, 1, 3, 0, 5, 2, 1, 0, 3, 1, 4, 3, 4},
+					{11, 6, 6, 11, 11, 7, 13, 6, 10, 10, 15},
+					{11, 12, 15, 11, 9, 13, 8, 14, 15, 11, 9}};
 
-	ASSERT_EQ(list == NULL, 0);
+	char input[8][19] = {"tests/test1.txt",
+						 "tests/test2.txt",
+						 "tests/test3.txt",
+						 "tests/test4.txt",
+						 "tests/test5.txt",
+						 "tests/test6.txt",
+						 "tests/test7.txt",
+						 "tests/test8.txt",
+						};
 
-	list_free(list);
-}
-
-TEST(list, push)
-{
-	struct list_t *list = list_create();
-
-	ASSERT_EQ(list_size(list), 0);
-
-	list_push_back(list, "asdq", 1);
-
-	ASSERT_EQ(list_size(list), 1);
-	ASSERT_EQ(list_node_get_value(list_end(list)) == 1, 1);
-	ASSERT_EQ(list_node_get_value(list_begin(list)) == 1, 1);
-
-	list_push_back(list, "87654321", 2);
-	ASSERT_EQ(list_size(list), 2);
-	ASSERT_EQ(list_node_get_value(list_end(list)) == 2, 1);
-	ASSERT_EQ(list_node_get_value(list_begin(list)) == 1, 1);
-
-	list_free(list);
-}
-
-
-TEST(hash_table, create)
-{
-	struct htab_t *htab = htab_create(5);
-	ASSERT_EQ(htab == NULL, 0);
-
-	htab_free(htab);
-}
-
-TEST(hash_table, insert)
-{
-	struct htab_t *htab = htab_create(20);
-
-	char s[5][6] = {"sdsad", "12345", "asdfg", "qwert", "09876"};
-
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		htab_insert(htab, s[i], i);
+		FILE* inp = fopen(input[i], "r");
+		ASSERT_EQ(solve(ans[i], inp), 1);
+		printf("hi\n");
+		fclose(inp);
 	}
-
-	ASSERT_EQ(htab_size(htab) == 5, 1);
-
-	char ss[6] = "sdsad";
-
-	htab_insert(htab, ss, 17);
-
-	ASSERT_EQ(htab_size(htab) == 5, 1);
-	htab_free(htab);
-}
-
-
-TEST(hash_table, find)
-{
-	int i = 0;
-	struct htab_t *htab = htab_create(5);
-	struct list_node_t *node = NULL;
-
-	char s[5][6] = {"sdsad", "12345", "asdfg", "qwert", "09876"};
-
-	for (int i = 0; i < 5; i++)
-	{
-		htab_insert(htab, s[i], i);
-	}
-
-	for (i = 0; i < 5; i++)
-	{
-		node = htab_find(htab, s[i]);
-		ASSERT_EQ(node != NULL, 1);
-	}
-
-	htab_free(htab);
-}
-
-TEST(hash_table, erase)
-{
-	struct htab_t *htab = htab_create(20);
-	struct list_node_t *node = NULL;
-
-	char s[5][6] = {"sdsad", "12345", "asdfg", "qwert", "09876"};
-	
-	for (int i = 0; i < 5; i++)
-	{
-		htab_insert(htab, s[i], i);
-	}
-
-	htab_erase(htab, "sdsad");
-	htab_erase(htab, "12345");
-
-	node = htab_find(htab, "sdsad");
-	ASSERT_EQ(node == NULL, 1);
-
-	node = htab_find(htab, "12345");
-	ASSERT_EQ(node == NULL, 1);
-
-	htab_free(htab);
-}
-
-TEST(hash_table, rehash)
-{
-	int i = 0;
-	struct htab_t *htab = htab_create(4);
-	struct list_node_t *node = NULL;
-
-	char s[5][6] = {"sdsad", "12345", "asdfg", "qwert", "09876"};
-	
-	for (i = 0; i < 5; i++)
-	{
-		htab_insert(htab, s[i], i);
-	}
-
-	htab_rehash(htab, 20);
-
-	for (i = 0; i < 5; i++)
-	{
-		node = htab_find(htab, s[i]);
-		ASSERT_EQ(node != NULL, 1);
-	}
-
-	htab_free(htab);
 }
