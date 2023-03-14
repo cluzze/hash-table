@@ -5,20 +5,20 @@ CFLAGS 	?= -g -Wall -Wextra -I$(INC_DIR)
 
 SRC = src/
 
-all: main.o list.o hash_table.o
-	$(CC) $^ -o main -lgtest -lpthread
+all: hwk.o list.o hash_table.o
+	$(CC) $^ -o main
 
-tests: test_main.o list.o hash_table.o
-	$(CC) $^ -o test_main -lgtest -lpthread
+unit_tests: test_main.o list.o hash_table.o
+	$(CC) $^ -o unit_tests -lgtest -lpthread
 
-main.o: $(SRC)main.cc
-	$(CC) $(CFLAGS) -c $^
+e2e_tests: e2e_main.o list.o hash_table.o
+	$(CC) $^ -o e2e_tests -lgtest -lpthread
 
-test_main.o: $(SRC)test_main.cc
+%.o: $(SRC)%.cc
 	$(CC) $(CFLAGS) -c $^
 
 %.o: $(SRC)%.cc $(SRC)%.h
 	$(CC) $(CFLAGS) -c $^
 
 clean:
-	rm *.o main test_main $(SRC)*.gch
+	rm *.o e2e_tests unit_tests hwk $(SRC)*.gch

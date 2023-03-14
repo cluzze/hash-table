@@ -103,7 +103,6 @@ TEST(e2e, e2e)
 	{
 		FILE* inp = fopen(input[i], "r");
 		ASSERT_EQ(solve(ans[i], inp), 1);
-		printf("hi\n");
 		fclose(inp);
 	}
 }
