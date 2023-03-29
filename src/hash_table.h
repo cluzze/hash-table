@@ -23,4 +23,6 @@ void htab_print(const struct htab_t *htab, FILE *fd);
 
 void htab_free(struct htab_t *htab);
 
+void htab_free_keys(struct htab_t *htab);
+
 #endif

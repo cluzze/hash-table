@@ -142,21 +142,29 @@ struct list_node_t *list_end(const struct list_t *list)
 
 int list_node_get_value(struct list_node_t *list_node)
 {
+	if (!list_node)
+		return 0;
 	return list_node->value;
 }
 
 int *list_node_get_value_ptr(struct list_node_t *list_node)
 {
+	if (!list_node)
+		return NULL;
 	return &list_node->value;
 }
 
 const char *list_node_get_key(struct list_node_t *list_node)
 {
+	if (!list_node)
+		return NULL;
 	return list_node->key;
 }
 
 const char **list_node_get_key_ptr(struct list_node_t *list_node)
 {
+	if (!list_node)
+		return NULL;
 	return &list_node->key;
 }
 

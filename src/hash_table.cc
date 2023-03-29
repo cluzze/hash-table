@@ -183,25 +183,17 @@ void htab_print(const struct htab_t *htab, FILE *fd)
 {
 	int i = 0;
 	struct htab_node_t *htab_node = NULL;
-	
-	fprintf(fd, "htab size: %d\n", htab_size(htab));
-	fprintf(fd, "list:\n");
-	list_print(htab->list, fd);
-	fprintf(fd, "htab nodes:\n");
+
 	for (i = 0; i < htab->size; i++)
 	{
-		fprintf(fd, "%d: ", i);
 		htab_node = htab->htab_nodes[i];
 
 		while (htab_node)
 		{
-			fprintf(fd, "<key = %s; value = %d>, ", list_node_get_key(htab_node->node),
-													list_node_get_value(htab_node->node));
+			fprintf(fd, "%s\n", list_node_get_key(htab_node->node));	
 			htab_node = htab_node->next;
 		}
-		fprintf(fd, "\n");
 	}
-	fprintf(fd, "\n");
 }
 
 void free_nodes(struct htab_t *htab)
@@ -232,8 +224,38 @@ void htab_free(struct htab_t *htab)
 	free(htab);
 }
 
+void htab_print_and_delete(struct htab_t *htab, FILE *fd)
+{
+	int i = 0;
+	struct htab_node_t *htab_node = NULL;
 
+	for (i = 0; i < htab->size; i++)
+	{
+		htab_node = htab->htab_nodes[i];
 
+		while (htab_node)
+		{
+			fprintf(fd, "%s\n", list_node_get_key(htab_node->node));
+			free((char*)list_node_get_key(htab_node->node));		
+			htab_node = htab_node->next;
+		}
+	}
+}
 
+void htab_free_keys(struct htab_t *htab)
+{
+	int i = 0;
+	struct htab_node_t *htab_node = NULL;
 
+	for (i = 0; i < htab->size; i++)
+	{
+		htab_node = htab->htab_nodes[i];
+
+		while (htab_node)
+		{
+			free((char*)list_node_get_key(htab_node->node));	
+			htab_node = htab_node->next;
+		}
+	}
+}
 
